@@ -7,6 +7,7 @@ import (
 	"imagu/db"
 	"imagu/db/repo"
 	"imagu/routes"
+	"imagu/util"
 	"log"
 )
 
@@ -43,7 +44,11 @@ func main() {
 	r.POST("/api/v1/register", auth.AuthPermission("register"), routes.RegisterUser)
 
 	r.POST("/api/v1/image/uploadImage", auth.AuthPermission("uploadImage"), routes.UploadImage)
-	r.GET("/image/viewImage/:id", auth.AuthPermission("viewImage"), routes.GetImage)
+	r.GET("/image/get/:id", auth.AuthPermission("viewImage"), routes.GetImage)
+	r.GET("/image/view/:id", auth.AuthPermission("viewImage"), routes.ViewImage)
+
+	r.GET("/api/v1/stats", routes.GetStats)
 
 	r.Run(":8080")
+	util.CloseLog()
 }

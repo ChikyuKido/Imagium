@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ .Title }}</title>
+    <link rel="stylesheet" href="/css/bulma.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #1d1f21;
+            color: #c5c8c6;
+        }
+        .section {
+            padding: 2rem;
+        }
+        .container {
+            max-width: 800px;
+        }
+        .box {
+            padding: 1.5rem;
+            background-color: #282a2e;
+            border-radius: 8px;
+        }
+        .field {
+            margin-bottom: 1rem;
+        }
+        .hidden {
+            display: none;
+        }
+        .label-outlined {
+            display: block;
+            padding: 0.5rem;
+            background-color: #373b41;
+            border: 1px solid #4f4f4f;
+            border-radius: 4px;
+            color: #c5c8c6;
+            cursor: pointer;
+            overflow: auto;
+            white-space: nowrap;
+        }
+        .label-outlined.small {
+            font-size: 0.9rem;
+            height: 40px;
+        }
+        .is-vertical {
+            display: flex;
+            flex-direction: column;
+        }
+        .is-horizontal {
+            display: flex;
+            gap: 1rem;
+        }
+    </style>
+</head>
+<body>
+<section class="section">
+    <div class="container">
+        <h1 class="title has-text-centered">{{ .Title }}</h1>
+        <div class="columns is-centered">
+            <div class="column is-half">
+                <figure class="image is-3by2">
+                    <img id="thumbnail" src="" alt="Dynamic Image">
+                </figure>
+            </div>
+        </div>
+        <div class="box">
+            <div class="field">
+                <label class="label">File Type</label>
+                <div class="control">
+                    <div class="select">
+                        <select id="file-type">
+                            <option value="png">PNG</option>
+                            <option value="jpg">JPG</option>
+                            <option value="webp">WEBP</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="field is-horizontal">
+                <div class="control">
+                    <label class="label">
+                        <input type="checkbox" id="resize">
+                        Resize
+                    </label>
+                    <div id="resize-options" class="hidden">
+                        <div class="field">
+                            <label class="label">Width</label>
+                            <div class="control">
+                                <input class="input" type="number" id="resize-width" min="1" placeholder="Width">
+                            </div>
+                        </div>
+                        <div class="field">
+                            <label class="label">Height</label>
+                            <div class="control">
+                                <input class="input" type="number" id="resize-height" min="1" placeholder="Height">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="control">
+                    <label class="label">
+                        <input type="checkbox" id="quality">
+                        Quality
+                    </label>
+                    <div id="quality-options" class="hidden">
+                        <div class="field">
+                            <label class="label">Quality (0-100)</label>
+                            <div class="control">
+                                <input class="input" type="number" id="quality-value" min="0" max="100" placeholder="Quality">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="control">
+                    <label class="label">
+                        <input type="checkbox" id="crop">
+                        Crop
+                    </label>
+                    <div id="crop-options" class="hidden">
+                        <div class="field">
+                            <label class="label">Width</label>
+                            <div class="control">
+                                <input class="input" type="number" id="crop-width" min="1" placeholder="Width">
+                            </div>
+                        </div>
+                        <div class="field">
+                            <label class="label">Height</label>
+                            <div class="control">
+                                <input class="input" type="number" id="crop-height" min="1" placeholder="Height">
+                            </div>
+                        </div>
+                        <div class="field">
+                            <label class="label">X</label>
+                            <div class="control">
+                                <input class="input" type="number" id="crop-x" min="0" placeholder="X">
+                            </div>
+                        </div>
+                        <div class="field">
+                            <label class="label">Y</label>
+                            <div class="control">
+                                <input class="input" type="number" id="crop-y" min="0" placeholder="Y">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="control">
+                    <label class="label">
+                        <input type="checkbox" id="blur">
+                        Blur
+                    </label>
+                </div>
+            </div>
+
+            <div class="field is-vertical">
+                <label class="label">Generated URL</label>
+                <div class="control">
+                    <div class="label-outlined small" id="url-preview">Sample URL will be here...</div>
+                </div>
+            </div>
+
+            <div class="field is-vertical">
+                <label class="label">HTML Code</label>
+                <div class="control">
+                    <div class="label-outlined small" id="html-code">Sample HTML code will be here...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+<script src="/js/image/imageView.js"></script>
+</body>
+</html>

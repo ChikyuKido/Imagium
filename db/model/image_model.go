@@ -5,4 +5,5 @@ type ImageModel struct {
 	Name   string
 	Author int
 	UUID   string
+	Size   int64
 }

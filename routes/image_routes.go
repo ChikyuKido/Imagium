@@ -4,12 +4,14 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	"html/template"
 	"imagu/converter"
 	"imagu/db/repo"
 	"imagu/util"
 	"mime/multipart"
 	"net/http"
 	"os"
+	"path"
 	"path/filepath"
 	"strings"
 )
@@ -26,6 +28,9 @@ func isValidImageType(fileHeader *multipart.FileHeader) bool {
 }
 func isValidImageExtension(filename string) bool {
 	allowedExtensions := []string{".png", ".jpg", ".jpeg", ".webp"}
+	if len(strings.Split(filename, ".")) != 2 {
+		return false
+	}
 	fileExt := strings.ToLower(filename[strings.LastIndex(filename, "."):])
 
 	for _, ext := range allowedExtensions {
@@ -63,12 +68,17 @@ func UploadImage(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to upload file"})
 		return
 	}
-	err = repo.CreateImage(file.Filename, user.ID, id.String())
+	err = converter.ConvertImage(dst, filepath.Dir(dst)+"/base.png", "", "", "")
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create file"})
 		return
 	}
-	err = converter.ConvertImage(dst, filepath.Dir(dst)+"/base.png", "", "", "")
+	stat, err := os.Stat(filepath.Dir(dst) + "/base.png")
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve file data"})
+		return
+	}
+	err = repo.CreateImage(file.Filename, user.ID, id.String(), stat.Size())
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create file"})
 		return
@@ -78,7 +88,10 @@ func UploadImage(c *gin.Context) {
 		fmt.Println("Could not delete downloaded file")
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"message": "File uploaded successfully"})
+	c.JSON(http.StatusOK, gin.H{
+		"message": "File uploaded successfully",
+		"url":     "/image/view/" + id.String(),
+	})
 }
 func GetImage(c *gin.Context) {
 	idParam := c.Param("id")
@@ -89,6 +102,7 @@ func GetImage(c *gin.Context) {
 	resizeQuery := c.Query("resize")
 	quality := c.Query("quality")
 	crop := strings.Replace(c.Query("crop"), " ", "+", -1)
+
 	uuid := strings.Split(idParam, ".")[0]
 	ext := filepath.Ext(idParam)[1:]
 
@@ -116,6 +130,45 @@ func GetImage(c *gin.Context) {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create file"})
 			return
 		}
+		stat, _ := os.Stat(file)
+		err = repo.UpdateSize(uuid, stat.Size())
+		if err != nil {
+			fmt.Println("Could not update size," + err.Error())
+		}
 	}
+	util.LogAccess(uuid)
 	c.File(file)
+}
+
+type ViewImagePage struct {
+	Title string
+}
+
+/*
+*
+Returns a page that shows the different url to present the image
+*/
+func ViewImage(c *gin.Context) {
+	idParam := c.Param("id")
+	image, err := repo.GetImageFromUUID(idParam)
+	if err != nil {
+		c.Redirect(http.StatusPermanentRedirect, "/")
+		return
+	}
+
+	viewpageData := ViewImagePage{
+		Title: image.Name,
+	}
+	tmpl, err := template.ParseFiles(path.Join("static", "html", "image", "imageView.html"))
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not create template"})
+		return
+	}
+
+	err = tmpl.Execute(c.Writer, viewpageData)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not create template"})
+		return
+	}
+
 }
