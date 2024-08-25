@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard</title>
+    <link rel="stylesheet" href="/css/bulma.css">
+    <style>
+        .modal {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+<section class="section">
+    <div class="container">
+        <h1 class="title">Admin Dashboard</h1>
+        <div class="tabs is-boxed">
+            <ul>
+                <li class="is-active" id="users-tab"><a>Users</a></li>
+                <li id="settings-tab"><a>Settings</a></li>
+            </ul>
+        </div>
+        <div class="content" id="users-section">
+            <h2 class="subtitle">User Management</h2>
+            <table class="table is-fullwidth">
+                <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Username</th>
+                    <th>Roles</th>
+                </tr>
+                </thead>
+                <tbody id="users-table-body">
+                <!-- Users data will be inserted here -->
+                </tbody>
+            </table>
+        </div>
+        <div class="content is-hidden" id="settings-section">
+            <h2 class="subtitle">Settings</h2>
+            <p>Settings content goes here.</p>
+        </div>
+    </div>
+</section>
+
+<!-- Role Management Modal -->
+<div class="modal" id="role-modal">
+    <div class="modal-background"></div>
+    <div class="modal-card">
+        <header class="modal-card-head">
+            <p class="modal-card-title">Manage Roles</p>
+            <button class="delete" aria-label="close" onclick="closeModal()"></button>
+        </header>
+        <section class="modal-card-body">
+            <div class="field">
+                <label class="label">Roles</label>
+                <div class="control">
+                    <input class="input" type="text" id="role-input" placeholder="Enter a role">
+                </div>
+            </div>
+            <div class="buttons">
+                <button class="button is-danger" onclick="deleteRole()">Delete</button>
+                <button class="button is-success" onclick="addRole()">Add</button>
+            </div>
+        </section>
+    </div>
+</div>
+<script src="/js/admin/dashboard.js"></script>
+</body>
+</html>

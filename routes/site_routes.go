@@ -22,6 +22,9 @@ func InitSiteRoutes(r *gin.Engine) {
 	sitesGroup.GET("/admin_register", middlewares.AdminRegisterAvailable(true), func(c *gin.Context) {
 		c.File("./static/html/admin_register.html")
 	})
+	sitesGroup.GET("/admin/dashboard", middlewares.AuthPermission("admin", true), func(c *gin.Context) {
+		c.File("./static/html/admin/dashboard.html")
+	})
 
 	// static resources
 	r.Static("/css", "./static/css")

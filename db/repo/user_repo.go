@@ -55,7 +55,17 @@ func GetUserByName(username string) (*model.User, error) {
 	}
 	return &user, nil
 }
+func GetUserById(id string) (*model.User, error) {
+	var user model.User
 
+	query := `SELECT ID, Username, Password,Roles FROM Users WHERE ID = ?`
+
+	err := db.DB.QueryRow(query, id).Scan(&user.ID, &user.Username, &user.Password, &user.Roles)
+	if err != nil {
+		return nil, err
+	}
+	return &user, nil
+}
 func DoesUserByNameExists(username string) bool {
 	var exists bool
 	query := `SELECT EXISTS(SELECT 1 FROM Users WHERE Username = ?)`
@@ -75,47 +85,6 @@ func HasRole(user *model.User, roleToCheck string) bool {
 	}
 
 	return false
-}
-
-func AddRole(user *model.User, roleToCheck string) error {
-	if !validRole(roleToCheck) {
-		return fmt.Errorf("Invalid role: %s", roleToCheck)
-	}
-	roles := strings.Split(user.Roles, ",")
-	contains := false
-	for _, role := range roles {
-		if strings.TrimSpace(role) == roleToCheck {
-			contains = true
-		}
-	}
-	if !contains {
-		roles = append(roles, roleToCheck)
-	}
-	user.Roles = strings.Join(roles, ",")
-	err := updateRole(user)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func RemoveRole(user *model.User, roleToCheck string) error {
-	if !validRole(roleToCheck) {
-		return fmt.Errorf("Invalid role: %s", roleToCheck)
-	}
-	roles := strings.Split(user.Roles, ",")
-	newRoles := make([]string, 0)
-	for _, role := range roles {
-		if strings.TrimSpace(role) != roleToCheck {
-			newRoles = append(newRoles, role)
-		}
-	}
-	user.Roles = strings.Join(newRoles, ",")
-	err := updateRole(user)
-	if err != nil {
-		return err
-	}
-	return nil
 }
 func GetAllUsers() ([]model.User, error) {
 	var users []model.User
@@ -150,7 +119,7 @@ func validRole(role string) bool {
 	}
 	return false
 }
-func updateRole(user *model.User) error {
+func UpdateRole(user *model.User) error {
 	query := `UPDATE Users SET Roles = ? WHERE ID = ?`
 	_, err := db.DB.Exec(query, user.Roles, user.ID)
 	if err != nil {

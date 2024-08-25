@@ -79,6 +79,7 @@ func AuthPermission(permission string, redirect bool) gin.HandlerFunc {
 			} else {
 				c.JSON(http.StatusForbidden, gin.H{"message": "You do not have permission to access this site"})
 			}
+			c.Abort()
 		}
 	}
 }
