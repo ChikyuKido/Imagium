@@ -3,7 +3,7 @@ package db
 import (
 	"database/sql"
 	_ "github.com/mattn/go-sqlite3"
-	"log"
+	"github.com/sirupsen/logrus"
 )
 
 var DB *sql.DB
@@ -12,10 +12,10 @@ func InitDB(dataSourceName string) {
 	var err error
 	DB, err = sql.Open("sqlite3", dataSourceName)
 	if err != nil {
-		log.Fatal(err)
+		logrus.Fatal("Could not open database: ", err)
 	}
 	if err = DB.Ping(); err != nil {
-		log.Fatal(err)
+		logrus.Fatal("Could not open database: ", err)
 	}
 }
 

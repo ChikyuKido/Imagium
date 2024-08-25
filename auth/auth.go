@@ -3,6 +3,7 @@ package auth
 import (
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
+	"github.com/sirupsen/logrus"
 	"imagu/db/model"
 	"imagu/db/repo"
 	"imagu/util"
@@ -65,6 +66,47 @@ func AuthPermission(permission string) gin.HandlerFunc {
 			c.Next()
 		} else {
 			c.Redirect(http.StatusPermanentRedirect, "/login")
+		}
+	}
+}
+func GlobalRedirect() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		if c.Request.URL.Path == "/admin_register" {
+			c.Next()
+		}
+		present, err := repo.GetAdminUser()
+		if err != nil {
+			logrus.Error("Could not check if the admin user exists: ", err)
+			c.Redirect(http.StatusPermanentRedirect, "/admin_register")
+			c.Abort()
+		}
+		if !present {
+			c.Redirect(http.StatusPermanentRedirect, "/admin_register")
+			c.Abort()
+		}
+	}
+}
+func AdminRegisterAvailable(redirect bool) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		present, err := repo.GetAdminUser()
+		if err != nil {
+			if redirect {
+				c.Redirect(http.StatusPermanentRedirect, "/login")
+			} else {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not check admin user"})
+			}
+			c.Abort()
+			logrus.Error("Could not check if the admin user exists: ", err)
+		}
+		if present {
+			if redirect {
+				c.Redirect(http.StatusPermanentRedirect, "/login")
+			} else {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "Admin user already exists"})
+			}
+			c.Abort()
+		} else {
+			c.Next()
 		}
 	}
 }

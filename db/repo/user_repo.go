@@ -16,7 +16,7 @@ func InitUserRepo() error {
 	    Roles 	 TEXT NOT NULL
 			);`)
 	if !DoesUserByNameExists("guest") {
-		_, err = db.DB.Exec(`INSERT INTO Users (Username, Password, Roles) VALUES (?, ?,?)`, "guest", "nopassword", "viewImage,uploadImage")
+		_, err = db.DB.Exec(`INSERT INTO Users (Username, Password, Roles) VALUES (?, ?,?)`, "guest", "nopassword", "viewImage,uploadImage,viewStats")
 		if err != nil {
 			return err
 		}
@@ -38,7 +38,7 @@ func CreateUser(username string, password string) error {
 	if err != nil {
 		return nil
 	}
-	_, err = db.DB.Exec(`INSERT INTO Users (Username, Password,Roles) VALUES (?, ?,?)`, username, hashedPassword, "viewImage,uploadImage")
+	_, err = db.DB.Exec(`INSERT INTO Users (Username, Password,Roles) VALUES (?, ?,?)`, username, hashedPassword, "viewImage,uploadImage,viewStats")
 	if err != nil {
 		return err
 	}
@@ -74,4 +74,62 @@ func HasPermission(user *model.User, roleToCheck string) bool {
 	}
 
 	return false
+}
+
+func AddPermission(user *model.User, roleToCheck string) error {
+	if !validRole(roleToCheck) {
+		return fmt.Errorf("Invalid role: %s", roleToCheck)
+	}
+	roles := strings.Split(user.Roles, ",")
+	contains := false
+	for _, role := range roles {
+		if strings.TrimSpace(role) == roleToCheck {
+			contains = true
+		}
+	}
+	if !contains {
+		roles = append(roles, roleToCheck)
+	}
+	user.Roles = strings.Join(roles, ",")
+	err := updatePermission(user)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func RemovePermission(user *model.User, roleToCheck string) error {
+	if !validRole(roleToCheck) {
+		return fmt.Errorf("Invalid role: %s", roleToCheck)
+	}
+	roles := strings.Split(user.Roles, ",")
+	newRoles := make([]string, 0)
+	for _, role := range roles {
+		if strings.TrimSpace(role) != roleToCheck {
+			newRoles = append(newRoles, role)
+		}
+	}
+	user.Roles = strings.Join(newRoles, ",")
+	err := updatePermission(user)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func validRole(role string) bool {
+	for _, r := range model.Roles {
+		if r == role {
+			return true
+		}
+	}
+	return false
+}
+func updatePermission(user *model.User) error {
+	query := `UPDATE Users SET Roles = ? WHERE ID = ?`
+	_, err := db.DB.Exec(query, user.Roles, user.ID)
+	if err != nil {
+		return err
+	}
+	return nil
 }

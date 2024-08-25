@@ -10,6 +10,8 @@ import (
 	"time"
 )
 
+var statsDir string = "./data/stats"
+
 type AccessStats struct {
 	AllTime    int32
 	ThisYear   int32
@@ -39,6 +41,7 @@ var (
 
 func init() {
 	CurrentAccessStats = &AccessStats{}
+	createAccessStats()
 	logChannel = make(chan string, 2500)
 	wg.Add(1)
 	go logWriter()
@@ -48,7 +51,7 @@ func logWriter() {
 	defer wg.Done()
 	for entry := range logChannel {
 		if accessLogFile == nil {
-			err := os.MkdirAll("./stats", 0755)
+			err := os.MkdirAll(statsDir, 0755)
 			if err != nil {
 				fmt.Println("Error creating directory:", err)
 				return
@@ -71,12 +74,12 @@ func aggregateLogs() {
 	if accessLogFile != nil {
 		accessLogFile.Close()
 	}
-	readFile, err := os.Open("./stats/access.log")
+	readFile, err := os.Open(statsDir + "/access.log")
 	if err != nil {
 		fmt.Println("Error opening file for reading:", err)
 		return
 	}
-	file, err := os.OpenFile("./stats/aggregated.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	file, err := os.OpenFile(statsDir+"/aggregated.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		fmt.Println("Error opening or creating file:", err)
 		return
@@ -113,12 +116,13 @@ func aggregateLogs() {
 	}
 	file.Close()
 	readFile.Close()
-	os.Remove("./stats/access.log")
+	os.Remove(statsDir + "/access.log")
 
 	createAccessStats()
 	openAccessLogFile()
 }
 func createAccessStats() {
+	CurrentAccessStats = &AccessStats{}
 	now := time.Now().Unix()
 	yearStart := time.Date(time.Now().Year(), time.January, 1, 0, 0, 0, 0, time.UTC).Unix()
 	oneYearAgo := now - 365*24*3600
@@ -132,7 +136,7 @@ func createAccessStats() {
 	oneHourAgo := now - 3600
 	thirtyMinutesAgo := now - 30*60
 	fifteenMinutesAgo := now - 15*60
-	file, err := os.Open("./stats/aggregated.log")
+	file, err := os.Open(statsDir + "/aggregated.log")
 	if err != nil {
 		return
 	}
@@ -194,7 +198,7 @@ func createAccessStats() {
 
 }
 func openAccessLogFile() {
-	file, err := os.OpenFile("./stats/access.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	file, err := os.OpenFile(statsDir+"/access.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		fmt.Println("Error opening or creating file:", err)
 		return

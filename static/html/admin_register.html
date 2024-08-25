@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Register</title>
+    <link rel="stylesheet" href="/css/bulma.css">
+    <style>
+        body {
+            background-color: #121212;
+            color: #e0e0e0;
+        }
+        .box {
+            background-color: #1f1f1f;
+            border-radius: 8px;
+        }
+        .button {
+            background-color: #1e90ff;
+            color: white;
+        }
+        .button:hover {
+            background-color: #1c86ee;
+        }
+        .field label {
+            color: #e0e0e0;
+        }
+    </style>
+</head>
+<body>
+<section class="hero is-fullheight">
+    <div class="hero-body">
+        <div class="container has-text-centered">
+            <div class="box">
+                <h1 class="title">Admin Register</h1>
+                <form id="registerForm">
+                    <div class="field">
+                        <label class="label">Username</label>
+                        <div class="control">
+                            <input class="input" type="text" placeholder="Username" name="username" required>
+                        </div>
+                    </div>
+                    <div class="field">
+                        <label class="label">Password</label>
+                        <div class="control">
+                            <input class="input" type="password" placeholder="Password" name="password" required>
+                        </div>
+                    </div>
+                    <div class="field">
+                        <div class="control">
+                            <button class="button is-fullwidth" type="submit">Register</button>
+                        </div>
+                    </div>
+                </form>
+                <p class="mt-4">Already have an account? <a href="login" class="has-text-info">Login here</a></p>
+            </div>
+        </div>
+    </div>
+</section>
+<script src="/js/admin_register.js"></script>
+</body>
+</html>

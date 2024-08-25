@@ -33,7 +33,8 @@ function updateURL() {
 
     const blur = document.getElementById('blur').checked;
     if (blur) {
-        url += (url.includes('?') ? '&' : '?') + 'blur=true';
+        const blurStrength = document.getElementById('blur-strength').value;
+        url += (url.includes('?') ? '&' : '?') + `blur=0x${blurStrength}`;
     }
 
     document.getElementById('url-preview').textContent = url;
@@ -57,8 +58,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const pathSegments = fullPath.split('/');
     const lastSegment = pathSegments[pathSegments.length - 1] || '/';
 
-    let url = rootURL + '/image/get/' + lastSegment+".png";
-    document.getElementById("thumbnail").src = url;
+    document.getElementById("thumbnail").src = rootURL + '/image/get/' + lastSegment + ".webp?quality=80&resize=1200x800";
+
     document.querySelectorAll('input, select').forEach(element => {
         element.addEventListener('change', updateURL);
     });
@@ -79,7 +80,10 @@ document.addEventListener('DOMContentLoaded', () => {
         updateURL();
     });
 
-    document.getElementById('blur').addEventListener('change', updateURL);
+    document.getElementById('blur').addEventListener('change', function () {
+        document.getElementById('blur-options').classList.toggle('hidden', !this.checked);
+        updateURL();
+    });
 
     document.getElementById('url-preview').addEventListener('click', function() {
         copyToClipboard( document.getElementById('url-preview').innerHTML)
