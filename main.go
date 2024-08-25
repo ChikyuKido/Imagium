@@ -51,7 +51,6 @@ func createDirs() {
 func initDB() {
 	db.InitDB("./data/database.db")
 	logrus.Info("Initialized database")
-	defer db.CloseDB()
 
 	err := repo.InitUserRepo()
 	if err != nil {
@@ -66,7 +65,9 @@ func initDB() {
 		logrus.Fatal("Error init settings repo: ", err)
 	}
 }
-func initLogrus() {
+func main() {
+	requiredEnvs()
+	createDirs()
 	file, err := os.OpenFile("./logs/"+time.Now().Format(time.DateTime)+".log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
 	defer file.Close()
 	if err != nil {
@@ -74,12 +75,6 @@ func initLogrus() {
 	}
 	logrus.SetOutput(io.MultiWriter(file, os.Stdout))
 	logrus.SetLevel(logrus.InfoLevel)
-
-}
-func main() {
-	requiredEnvs()
-	createDirs()
-	initLogrus()
 	initDB()
 
 	gin.SetMode(gin.ReleaseMode)
@@ -95,7 +90,7 @@ func main() {
 	routes.InitAdminRoutes(r)
 
 	logrus.Info("Starting Gin server")
-	err := r.Run(":" + os.Getenv("PORT"))
+	err = r.Run(":" + os.Getenv("PORT"))
 	if err != nil {
 		logrus.Fatal("Could not Run gin: ", err)
 	}
