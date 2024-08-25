@@ -31,12 +31,14 @@ func AuthMiddleware() gin.HandlerFunc {
 
 		token, err := util.GetToken(tokenString)
 		if err != nil || !token.Valid {
+			c.SetCookie("jwt", "", -1, "/", "", false, true)
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token"})
 			c.Abort()
 			return
 		}
 		claims, ok := token.Claims.(jwt.MapClaims)
 		if !ok || !token.Valid {
+			c.SetCookie("jwt", "", -1, "/", "", false, true)
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token claims"})
 			c.Abort()
 			return
@@ -44,6 +46,7 @@ func AuthMiddleware() gin.HandlerFunc {
 		userName := claims["username"].(string)
 		user, err := repo.GetUserByName(userName)
 		if err != nil {
+			c.SetCookie("jwt", "", -1, "/", "", false, true)
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token claims"})
 			c.Abort()
 			return

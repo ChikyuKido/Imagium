@@ -19,8 +19,8 @@ func InitSiteRoutes(r *gin.Engine) {
 		c.File("./static/html/register.html")
 	})
 	// only is available if no admin user was created
-	sitesGroup.GET("/admin_register", middlewares.AdminRegisterAvailable(true), func(c *gin.Context) {
-		c.File("./static/html/admin_register.html")
+	sitesGroup.GET("/admin/register", middlewares.AdminRegisterAvailable(true), func(c *gin.Context) {
+		c.File("./static/html/admin/register.html")
 	})
 	sitesGroup.GET("/admin/dashboard", middlewares.AuthPermission("admin", true), func(c *gin.Context) {
 		c.File("./static/html/admin/dashboard.html")
