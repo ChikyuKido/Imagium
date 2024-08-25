@@ -20,12 +20,36 @@ import (
 )
 
 var uploadsDir = "./data/uploads"
-var baseFile = "base.qoi"
 
+// InitImageRoutes sets up the routes for image-related endpoints.
 func InitImageRoutes(r *gin.Engine) {
 	r.POST("/api/v1/image/uploadImage", middlewares.AuthPermission("uploadImage", false), uploadImage)
 	r.GET("/image/get/:id", middlewares.AuthPermission("viewImage", false), getImage)
 	r.GET("/image/view/:id", middlewares.AuthPermission("viewImage", false), viewImage)
+}
+
+// isImageTypeLossy determines if the provided file extension indicates a lossy image type.
+func isImageTypeLossy(ext string) bool {
+	lossyExtensions := map[string]bool{
+		".jpg":  true,
+		".jpeg": true,
+		".webp": true,
+	}
+	return lossyExtensions[ext]
+}
+
+// getBaseImageFileName retrieves the name of the base image file from the specified directory.
+func getBaseImageFileName(dir string) (string, error) {
+	files, err := os.ReadDir(dir)
+	if err != nil {
+		return "", err
+	}
+	for _, file := range files {
+		if strings.HasPrefix(file.Name(), "base") {
+			return file.Name(), nil
+		}
+	}
+	return "", fmt.Errorf("base file not found")
 }
 
 // isValidImageType checks if the uploaded file has an allowed MIME type.
@@ -36,93 +60,105 @@ func isValidImageType(fileHeader *multipart.FileHeader) bool {
 		"image/webp": true,
 		"image/qoi":  true,
 	}
-
 	contentType := fileHeader.Header.Get("Content-Type")
 	return allowedMIMETypes[contentType]
 }
 
 // isValidImageExtension checks if the file extension is among the allowed ones.
 func isValidImageExtension(filename string) bool {
-	allowedExtensions := []string{".png", ".jpg", ".jpeg", ".webp", ".qoi"}
-	if len(strings.Split(filename, ".")) != 2 {
-		return false
+	allowedExtensions := map[string]bool{
+		".png":  true,
+		".jpg":  true,
+		".jpeg": true,
+		".webp": true,
+		".qoi":  true,
 	}
-	fileExt := strings.ToLower(filename[strings.LastIndex(filename, "."):])
-
-	for _, ext := range allowedExtensions {
-		if fileExt == ext {
-			return true
-		}
-	}
-	return false
+	fileExt := strings.ToLower(filepath.Ext(filename))
+	return allowedExtensions[fileExt]
 }
 
-// uploadImage handles image uploads, validates them, and performs conversions.
+// uploadImage handles image uploads, validates the image, and performs conversions if necessary.
 func uploadImage(c *gin.Context) {
 	file, err := c.FormFile("file")
 	if err != nil {
+		logrus.Warn("No file received")
 		c.JSON(http.StatusBadRequest, gin.H{"error": "No file received"})
 		return
 	}
 	if !isValidImageType(file) || !isValidImageExtension(file.Filename) {
+		logrus.Warn("Invalid file type. Supported formats: png, jpg, jpeg, webp, qoi")
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid file type. Supported formats: png, jpg, jpeg, webp, qoi"})
 		return
 	}
+
 	user := util.GetUserFromContext(c)
 	if user == nil {
+		logrus.Error("User not found")
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "User not found"})
 		return
 	}
 
 	id := uuid.New()
-	err = os.MkdirAll(filepath.Join(uploadsDir, id.String()), 0755)
-	if err != nil {
+	directory := filepath.Join(uploadsDir, id.String())
+	if err = os.MkdirAll(directory, 0755); err != nil {
 		logrus.Errorf("Failed to create directory: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create directory"})
 		return
 	}
-	dst := filepath.Join(uploadsDir, id.String(), file.Filename)
-	err = c.SaveUploadedFile(file, dst)
-	if err != nil {
+
+	dst := filepath.Join(directory, file.Filename)
+	if err = c.SaveUploadedFile(file, dst); err != nil {
 		logrus.Errorf("Failed to upload file: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to upload file"})
 		return
 	}
-	err = converter.ConvertImage(dst, filepath.Join(filepath.Dir(dst), baseFile), "", "", "", "")
+
+	var baseFile string
+	if isImageTypeLossy(filepath.Ext(dst)) {
+		baseFile = "base.webp"
+		err = converter.ConvertImage(dst, filepath.Join(directory, baseFile), "", "", "", "")
+	} else {
+		baseFile = "base.qoi"
+		err = converter.ConvertImage(dst, filepath.Join(directory, baseFile), "", "", "", "")
+	}
+
 	if err != nil {
 		logrus.Errorf("Failed to convert image: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to convert image"})
 		return
 	}
-	stat, err := os.Stat(filepath.Join(filepath.Dir(dst), baseFile))
+
+	stat, err := os.Stat(filepath.Join(directory, baseFile))
 	if err != nil {
 		logrus.Errorf("Failed to retrieve file data: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve file data"})
 		return
 	}
-	err = repo.CreateImage(file.Filename, user.ID, id.String(), stat.Size())
-	if err != nil {
+
+	if err = repo.CreateImage(file.Filename, user.ID, id.String(), stat.Size()); err != nil {
 		logrus.Errorf("Failed to create image record: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create image record"})
 		return
 	}
-	err = os.Remove(dst)
-	if err != nil {
+
+	if err = os.Remove(dst); err != nil {
 		logrus.Warnf("Could not delete uploaded file: %v", err)
 	}
+
 	c.JSON(http.StatusOK, gin.H{
 		"message": "File uploaded successfully",
 		"url":     fmt.Sprintf("/image/view/%s", id.String()),
 	})
 }
 
-// getImage handles requests to retrieve images, applying transformations if needed.
+// getImage retrieves the image based on the provided ID, applying transformations if needed.
 func getImage(c *gin.Context) {
 	idParam := c.Param("id")
 	if !isValidImageExtension(idParam) {
 		c.JSON(http.StatusNotFound, gin.H{"message": "Invalid file extension"})
 		return
 	}
+
 	resizeQuery := c.Query("resize")
 	quality := c.Query("quality")
 	blur := c.Query("blur")
@@ -131,70 +167,81 @@ func getImage(c *gin.Context) {
 	uuid := strings.Split(idParam, ".")[0]
 	ext := filepath.Ext(idParam)[1:]
 
-	file := fmt.Sprintf("%s/%s/base_", uploadsDir, uuid)
+	filePath := fmt.Sprintf("%s/%s/alt_", uploadsDir, uuid)
 	wasChanged := false
+
 	if quality != "" {
-		file += fmt.Sprintf("q:%s", quality)
+		filePath += fmt.Sprintf("q:%s", quality)
 		wasChanged = true
 	}
 	if resizeQuery != "" && crop == "" {
-		file += fmt.Sprintf("r:%s", resizeQuery)
+		filePath += fmt.Sprintf("r:%s", resizeQuery)
 		wasChanged = true
 	}
 	if crop != "" {
-		file += fmt.Sprintf("c:%s", crop)
+		filePath += fmt.Sprintf("c:%s", crop)
 		wasChanged = true
 	}
 	if blur != "" {
-		file += fmt.Sprintf("b:%s", blur)
+		filePath += fmt.Sprintf("b:%s", blur)
 		wasChanged = true
 	}
+
 	if !wasChanged {
-		file = fmt.Sprintf("%s/%s/base", uploadsDir, uuid)
+		filePath = fmt.Sprintf("%s/%s/alt", uploadsDir, uuid)
 	}
-	file += fmt.Sprintf(".%s", ext)
-	if !util.FileExists(file) {
-		err := converter.ConvertImage(filepath.Join(uploadsDir, uuid, baseFile), file, resizeQuery, quality, crop, blur)
+	filePath += fmt.Sprintf(".%s", ext)
+
+	if !util.FileExists(filePath) {
+		dir := filepath.Join(uploadsDir, uuid)
+		baseFile, err := getBaseImageFileName(dir)
+		if err != nil {
+			logrus.Errorf("Failed to get base image: %v", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get base image"})
+			return
+		}
+		err = converter.ConvertImage(filepath.Join(dir, baseFile), filePath, resizeQuery, quality, crop, blur)
 		if err != nil {
 			logrus.Errorf("Failed to create image: %v", err)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create image"})
 			return
 		}
-		stat, _ := os.Stat(file)
-		err = repo.UpdateSizeAndCount(uuid, stat.Size(), 1)
-		if err != nil {
+		stat, _ := os.Stat(filePath)
+		if err := repo.UpdateSizeAndCount(uuid, stat.Size(), 1); err != nil {
 			logrus.Warnf("Could not update image size: %v", err)
 		}
 	}
+
 	util.LogAccess(uuid)
-	c.File(file)
+	c.File(filePath)
 }
 
 type viewImagePage struct {
 	Title string
 }
 
-// viewImage handles the display of the image view page.
+// viewImage displays the image view page for the given image ID.
 func viewImage(c *gin.Context) {
 	idParam := c.Param("id")
 	image, err := repo.GetImageFromUUID(idParam)
 	if err != nil {
-		c.Redirect(http.StatusPermanentRedirect, "/")
+		logrus.Warnf("Image with ID %s not found", idParam)
+		c.Redirect(http.StatusTemporaryRedirect, "/")
 		return
 	}
 
 	viewpageData := viewImagePage{
 		Title: image.Name,
 	}
-	tmpl, err := template.ParseFiles(path.Join("static", "html", "image", "imageView.html"))
+	tmplPath := path.Join("static", "html", "image", "imageView.html")
+	tmpl, err := template.ParseFiles(tmplPath)
 	if err != nil {
-		logrus.Errorf("Could not parse template: %v", err)
+		logrus.Errorf("Could not parse template %s: %v", tmplPath, err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not parse template"})
 		return
 	}
 
-	err = tmpl.Execute(c.Writer, viewpageData)
-	if err != nil {
+	if err := tmpl.Execute(c.Writer, viewpageData); err != nil {
 		logrus.Errorf("Could not execute template: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not execute template"})
 		return

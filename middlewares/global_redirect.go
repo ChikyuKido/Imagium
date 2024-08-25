@@ -16,11 +16,11 @@ func GlobalRedirect() gin.HandlerFunc {
 		present, err := repo.GetAdminUser()
 		if err != nil {
 			logrus.Error("Could not check if the admin user exists: ", err)
-			c.Redirect(http.StatusPermanentRedirect, "/admin/register")
+			c.Redirect(http.StatusTemporaryRedirect, "/admin/register")
 			c.Abort()
 		}
 		if !present {
-			c.Redirect(http.StatusPermanentRedirect, "/admin/register")
+			c.Redirect(http.StatusTemporaryRedirect, "/admin/register")
 			c.Abort()
 		}
 	}

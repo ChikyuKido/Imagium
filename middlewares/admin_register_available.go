@@ -13,7 +13,7 @@ func AdminRegisterAvailable(redirect bool) gin.HandlerFunc {
 		present, err := repo.GetAdminUser()
 		if err != nil {
 			if redirect {
-				c.Redirect(http.StatusPermanentRedirect, "/login")
+				c.Redirect(http.StatusTemporaryRedirect, "/login")
 			} else {
 				c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not check admin user"})
 			}
@@ -22,7 +22,7 @@ func AdminRegisterAvailable(redirect bool) gin.HandlerFunc {
 		}
 		if present {
 			if redirect {
-				c.Redirect(http.StatusPermanentRedirect, "/login")
+				c.Redirect(http.StatusTemporaryRedirect, "/login")
 			} else {
 				c.JSON(http.StatusInternalServerError, gin.H{"error": "Admin user already exists"})
 			}

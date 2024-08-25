@@ -75,7 +75,6 @@ func serveDirectory(rootPath string, baseDir string, r *gin.RouterGroup) {
 
 func InitSiteRoutes(r *gin.Engine) {
 	sitesGroup := r.Group("/")
-	//sitesGroup.Use(gzip.Gzip(gzip.BestSpeed))
 	redirectGroup := sitesGroup.Group("/")
 	redirectGroup.Use(middlewares.GlobalRedirect())
 

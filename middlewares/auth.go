@@ -78,7 +78,7 @@ func AuthPermission(permission string, redirect bool) gin.HandlerFunc {
 			c.Next()
 		} else {
 			if redirect {
-				c.Redirect(http.StatusPermanentRedirect, "/login")
+				c.Redirect(http.StatusTemporaryRedirect, "/login")
 			} else {
 				c.JSON(http.StatusForbidden, gin.H{"message": "You do not have permission to access this site"})
 			}
