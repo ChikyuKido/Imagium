@@ -3,9 +3,9 @@ package main
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
-	"imagu/auth"
 	"imagu/db"
 	"imagu/db/repo"
+	"imagu/middlewares"
 	"imagu/routes"
 	"imagu/util"
 	"io"
@@ -66,39 +66,13 @@ func main() {
 	r := gin.New()
 	r.Use(LoggerWithLogrus(), gin.Recovery())
 	r.MaxMultipartMemory = 8 << 20
+	r.Use(middlewares.AuthMiddleware())
 
-	r.Use(auth.AuthMiddleware())
-
-	sitesGroup := r.Group("/")
-	sitesGroup.Use(auth.GlobalRedirect())
-
-	// pages
-	sitesGroup.GET("/", auth.AuthPermission("uploadImage"), func(c *gin.Context) {
-		c.File("./static/html/index.html")
-	})
-	sitesGroup.StaticFile("/login", "./static/html/login.html")
-	sitesGroup.GET("/register", auth.AuthPermission("register"), func(c *gin.Context) {
-		c.File("./static/html/register.html")
-	})
-	sitesGroup.GET("/admin_register", auth.AdminRegisterAvailable(true), func(c *gin.Context) {
-		c.File("./static/html/admin_register.html")
-	})
-
-	r.Static("/css", "./static/css")
-	r.Static("/js", "./static/js")
-
-	// api endpoints
-	r.POST("/api/v1/login", routes.LoginUser)
-	r.POST("/api/v1/user/checkPermission", routes.CheckPermission)
-	r.POST("/api/v1/register", auth.AuthPermission("register"), routes.RegisterUser)
-
-	r.POST("/api/v1/image/uploadImage", auth.AuthPermission("uploadImage"), routes.UploadImage)
-	r.GET("/image/get/:id", auth.AuthPermission("viewImage"), routes.GetImage)
-	r.GET("/image/view/:id", auth.AuthPermission("viewImage"), routes.ViewImage)
-
-	r.GET("/api/v1/stats", auth.AuthPermission("viewStats"), routes.GetStats)
-
-	r.POST("/api/v1/admin/register", auth.AdminRegisterAvailable(false), routes.AdminRegister)
+	routes.InitSiteRoutes(r)
+	routes.InitUserRoutes(r)
+	routes.InitStatsRoutes(r)
+	routes.InitImageRoutes(r)
+	routes.InitAdminRoutes(r)
 
 	logrus.Info("Starting Gin server")
 	err = r.Run(":8080")

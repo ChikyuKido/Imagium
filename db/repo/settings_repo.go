@@ -1,6 +1,8 @@
 package repo
 
-import "imagu/db"
+import (
+	"imagu/db"
+)
 
 func InitSettingsRepo() error {
 	_, err := db.DB.Exec(`CREATE TABLE IF NOT EXISTS Settings (

@@ -1,18 +1,22 @@
-package auth
+package middlewares
 
 import (
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
-	"github.com/sirupsen/logrus"
 	"imagu/db/model"
 	"imagu/db/repo"
 	"imagu/util"
 	"net/http"
 )
 
+// AuthMiddleware is a middleware function that handles authentication.
+// It checks for a JWT token in the "Authorization" header. If the token is not present
+// or is "guest", it retrieves and sets a "guest" user. Otherwise, it validates the token
+// and sets the authenticated user in the context.
 func AuthMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		tokenString := c.GetHeader("Authorization")
+		tokenString, _ := c.Cookie("jwt")
+		// guest login
 		if tokenString == "" || tokenString == "guest" {
 			guest, err := repo.GetUserByName("guest")
 			if err != nil {
@@ -37,7 +41,7 @@ func AuthMiddleware() gin.HandlerFunc {
 			c.Abort()
 			return
 		}
-		userName := claims["name"].(string)
+		userName := claims["username"].(string)
 		user, err := repo.GetUserByName(userName)
 		if err != nil {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token claims"})
@@ -48,7 +52,12 @@ func AuthMiddleware() gin.HandlerFunc {
 		c.Next()
 	}
 }
-func AuthPermission(permission string) gin.HandlerFunc {
+
+// AuthPermission is a middleware function that checks if the authenticated user
+// has a specific permission. If the user does not have the required permission, it
+// either redirects them to the login page or responds with a 403 Forbidden status.
+
+func AuthPermission(permission string, redirect bool) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		user, exists := c.Get("user")
 		if !exists {
@@ -62,51 +71,14 @@ func AuthPermission(permission string) gin.HandlerFunc {
 			c.Abort()
 			return
 		}
-		if repo.HasPermission(u, permission) {
+		if repo.HasRole(u, permission) {
 			c.Next()
 		} else {
-			c.Redirect(http.StatusPermanentRedirect, "/login")
-		}
-	}
-}
-func GlobalRedirect() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		if c.Request.URL.Path == "/admin_register" {
-			c.Next()
-		}
-		present, err := repo.GetAdminUser()
-		if err != nil {
-			logrus.Error("Could not check if the admin user exists: ", err)
-			c.Redirect(http.StatusPermanentRedirect, "/admin_register")
-			c.Abort()
-		}
-		if !present {
-			c.Redirect(http.StatusPermanentRedirect, "/admin_register")
-			c.Abort()
-		}
-	}
-}
-func AdminRegisterAvailable(redirect bool) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		present, err := repo.GetAdminUser()
-		if err != nil {
 			if redirect {
 				c.Redirect(http.StatusPermanentRedirect, "/login")
 			} else {
-				c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not check admin user"})
+				c.JSON(http.StatusForbidden, gin.H{"message": "You do not have permission to access this site"})
 			}
-			c.Abort()
-			logrus.Error("Could not check if the admin user exists: ", err)
-		}
-		if present {
-			if redirect {
-				c.Redirect(http.StatusPermanentRedirect, "/login")
-			} else {
-				c.JSON(http.StatusInternalServerError, gin.H{"error": "Admin user already exists"})
-			}
-			c.Abort()
-		} else {
-			c.Next()
 		}
 	}
 }

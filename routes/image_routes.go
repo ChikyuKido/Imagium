@@ -7,6 +7,7 @@ import (
 	"html/template"
 	"imagu/converter"
 	"imagu/db/repo"
+	"imagu/middlewares"
 	"imagu/util"
 	"mime/multipart"
 	"net/http"
@@ -20,6 +21,12 @@ import (
 
 var uploadsDir = "./data/uploads"
 var baseFile = "base.qoi"
+
+func InitImageRoutes(r *gin.Engine) {
+	r.POST("/api/v1/image/uploadImage", middlewares.AuthPermission("uploadImage", false), uploadImage)
+	r.GET("/image/get/:id", middlewares.AuthPermission("viewImage", false), getImage)
+	r.GET("/image/view/:id", middlewares.AuthPermission("viewImage", false), viewImage)
+}
 
 // isValidImageType checks if the uploaded file has an allowed MIME type.
 func isValidImageType(fileHeader *multipart.FileHeader) bool {
@@ -50,8 +57,8 @@ func isValidImageExtension(filename string) bool {
 	return false
 }
 
-// UploadImage handles image uploads, validates them, and performs conversions.
-func UploadImage(c *gin.Context) {
+// uploadImage handles image uploads, validates them, and performs conversions.
+func uploadImage(c *gin.Context) {
 	file, err := c.FormFile("file")
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "No file received"})
@@ -109,8 +116,8 @@ func UploadImage(c *gin.Context) {
 	})
 }
 
-// GetImage handles requests to retrieve images, applying transformations if needed.
-func GetImage(c *gin.Context) {
+// getImage handles requests to retrieve images, applying transformations if needed.
+func getImage(c *gin.Context) {
 	idParam := c.Param("id")
 	if !isValidImageExtension(idParam) {
 		c.JSON(http.StatusNotFound, gin.H{"message": "Invalid file extension"})
@@ -163,12 +170,12 @@ func GetImage(c *gin.Context) {
 	c.File(file)
 }
 
-type ViewImagePage struct {
+type viewImagePage struct {
 	Title string
 }
 
-// ViewImage handles the display of the image view page.
-func ViewImage(c *gin.Context) {
+// viewImage handles the display of the image view page.
+func viewImage(c *gin.Context) {
 	idParam := c.Param("id")
 	image, err := repo.GetImageFromUUID(idParam)
 	if err != nil {
@@ -176,7 +183,7 @@ func ViewImage(c *gin.Context) {
 		return
 	}
 
-	viewpageData := ViewImagePage{
+	viewpageData := viewImagePage{
 		Title: image.Name,
 	}
 	tmpl, err := template.ParseFiles(path.Join("static", "html", "image", "imageView.html"))

@@ -23,8 +23,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 window.location.href = '/login';
             } else {
                 const error = await response.json();
-                console.error('Register failed', error);
-                alert('Register failed: ' + error.message);
+                console.error('Register failed', error.error);
+                alert('Register failed: ' + error.error);
             }
         } catch (error) {
             console.error('Error during Register', error);

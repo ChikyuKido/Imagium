@@ -10,7 +10,7 @@ document.addEventListener('DOMContentLoaded', () => {
         };
 
         try {
-            const response = await fetch('/api/v1/register', {
+            const response = await fetch('/api/v1/user/register', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -24,7 +24,7 @@ document.addEventListener('DOMContentLoaded', () => {
             } else {
                 const error = await response.json();
                 console.error('Register failed', error);
-                alert('Register failed: ' + error.message);
+                alert('Register failed: ' + error.error);
             }
         } catch (error) {
             console.error('Error during Register', error);

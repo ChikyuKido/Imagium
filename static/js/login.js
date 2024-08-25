@@ -10,7 +10,7 @@ document.addEventListener('DOMContentLoaded', () => {
         };
 
         try {
-            const response = await fetch('/api/v1/login', {
+            const response = await fetch('/api/v1/user/login', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -19,15 +19,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
             if (response.ok) {
-                const result = await response.json();
-                const token = result.token;
-                if (token) {
-                    localStorage.setItem('jwt', token);
-                    window.location.href = '/';
-                } else {
-                    console.error('JWT not received');
-                    alert('Login failed: No JWT received');
-                }
+                window.location.href = '/';
             } else {
                 const error = await response.json();
                 console.error('Login failed', error);

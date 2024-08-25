@@ -4,10 +4,16 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
 	"imagu/db/repo"
+	"imagu/middlewares"
 	"net/http"
 )
 
-func AdminRegister(c *gin.Context) {
+func InitAdminRoutes(r *gin.Engine) {
+	r.POST("/api/v1/admin/register", middlewares.AdminRegisterAvailable(false), adminRegister)
+	r.GET("/api/v1/admin/users", middlewares.AuthPermission("admin", false), getAllUsers)
+}
+
+func adminRegister(c *gin.Context) {
 	var request struct {
 		Username string `json:"username" binding:"required"`
 		Password string `json:"password" binding:"required"`
@@ -34,13 +40,13 @@ func AdminRegister(c *gin.Context) {
 		return
 	}
 
-	err = repo.AddPermission(user, "admin")
+	err = repo.AddRole(user, "admin")
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not add role admin"})
 		logrus.Error("Could not add role admin: ", err)
 		return
 	}
-	err = repo.AddPermission(user, "register")
+	err = repo.AddRole(user, "register")
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not add role register"})
 		logrus.Error("Could not add role register: ", err)
@@ -53,4 +59,13 @@ func AdminRegister(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"message": "Successfully register a admin user"})
+}
+
+func getAllUsers(c *gin.Context) {
+	users, err := repo.GetAllUsers()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not retrieve users"})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"users": users})
 }

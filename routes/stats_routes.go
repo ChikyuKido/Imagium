@@ -3,10 +3,11 @@ package routes
 import (
 	"github.com/gin-gonic/gin"
 	"imagu/db/repo"
+	"imagu/middlewares"
 	"imagu/util"
 )
 
-type StatsResponse struct {
+type statsResponse struct {
 	Images      int              `json:"images"`
 	SubImages   int              `json:"sub_images"`
 	TotalImages int              `json:"total_images"`
@@ -14,7 +15,11 @@ type StatsResponse struct {
 	AccessStats util.AccessStats `json:"access_stats"`
 }
 
-func GetStats(c *gin.Context) {
+func InitStatsRoutes(r *gin.Engine) {
+	r.GET("/api/v1/stats", middlewares.AuthPermission("viewStats", false), getStats)
+}
+
+func getStats(c *gin.Context) {
 	images, _ := repo.GetAllImages()
 	imageCount := len(images)
 	subImageCount := 0
@@ -23,7 +28,7 @@ func GetStats(c *gin.Context) {
 		imagesSize += value.Size
 		subImageCount += value.SubImages
 	}
-	stats := StatsResponse{
+	stats := statsResponse{
 		Images:      imageCount,
 		SubImages:   subImageCount,
 		TotalImages: imageCount + subImageCount,
