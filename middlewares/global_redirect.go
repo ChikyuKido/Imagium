@@ -7,7 +7,7 @@ import (
 	"net/http"
 )
 
-// GlobalRedirect redirects everything to the admin_register until an admin was created
+// GlobalRedirect redirects everything to the admin/register until an admin was created
 func GlobalRedirect() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		if c.Request.URL.Path == "/admin/register" {

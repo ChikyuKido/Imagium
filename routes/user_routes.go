@@ -8,6 +8,7 @@ import (
 	"imagu/middlewares"
 	"imagu/util"
 	"net/http"
+	"os"
 )
 
 func InitUserRoutes(r *gin.Engine) {
@@ -67,6 +68,6 @@ func loginUser(c *gin.Context) {
 		return
 	}
 
-	c.SetCookie("jwt", token, 60*60*24*30, "/", "localhost", false, true)
+	c.SetCookie("jwt", token, 60*60*24*30, "/", os.Getenv("DOMAIN"), false, true)
 	c.JSON(http.StatusOK, gin.H{"message": "Successfully logged in"})
 }

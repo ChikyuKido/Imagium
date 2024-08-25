@@ -28,7 +28,17 @@ func LoggerWithLogrus() gin.HandlerFunc {
 	}
 }
 
-func main() {
+func existEnv(key string) {
+	myVar := os.Getenv(key)
+	if myVar == "" {
+		panic("env variable MY_VAR not set: " + key)
+	}
+}
+func requiredEnvs() {
+	existEnv("DOMAIN")
+	existEnv("PORT")
+}
+func createDirs() {
 	err := os.MkdirAll("./logs", 0755)
 	if err != nil {
 		panic(err)
@@ -37,19 +47,13 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	file, err := os.OpenFile("./logs/"+time.Now().Format(time.DateTime)+".log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
-	defer file.Close()
-	if err != nil {
-		panic(err)
-	}
-	logrus.SetOutput(io.MultiWriter(file, os.Stdout))
-	logrus.SetLevel(logrus.InfoLevel)
-
+}
+func initDB() {
 	db.InitDB("./data/database.db")
 	logrus.Info("Initialized database")
 	defer db.CloseDB()
 
-	err = repo.InitUserRepo()
+	err := repo.InitUserRepo()
 	if err != nil {
 		logrus.Fatal("Error init user repo: ", err)
 	}
@@ -61,6 +65,22 @@ func main() {
 	if err != nil {
 		logrus.Fatal("Error init settings repo: ", err)
 	}
+}
+func initLogrus() {
+	file, err := os.OpenFile("./logs/"+time.Now().Format(time.DateTime)+".log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+	defer file.Close()
+	if err != nil {
+		panic(err)
+	}
+	logrus.SetOutput(io.MultiWriter(file, os.Stdout))
+	logrus.SetLevel(logrus.InfoLevel)
+
+}
+func main() {
+	requiredEnvs()
+	createDirs()
+	initLogrus()
+	initDB()
 
 	gin.SetMode(gin.ReleaseMode)
 	r := gin.New()
@@ -75,7 +95,7 @@ func main() {
 	routes.InitAdminRoutes(r)
 
 	logrus.Info("Starting Gin server")
-	err = r.Run(":8080")
+	err := r.Run(":" + os.Getenv("PORT"))
 	if err != nil {
 		logrus.Fatal("Could not Run gin: ", err)
 	}
