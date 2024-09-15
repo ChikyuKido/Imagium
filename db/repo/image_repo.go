@@ -6,63 +6,53 @@ import (
 )
 
 func InitImageRepo() error {
-	_, err := db.DB.Exec(`CREATE TABLE IF NOT EXISTS Images (
-	    ID INTEGER PRIMARY KEY AUTOINCREMENT,
-	    Name TEXT NOT NULL,
-	    Author INTEGER NOT NULL,
-	    UUID TEXT NOT NULL,
-	    Size INTEGER NOT NULL,
-	    SubImages INTEGER NOT NULL
-			);`)
-	if err != nil {
+	if err := db.DB.AutoMigrate(&model.ImageModel{}); err != nil {
 		return err
 	}
 	return nil
 }
 
-func CreateImage(name string, author int, uuid string, size int64) error {
-	_, err := db.DB.Exec(`INSERT INTO Images (Name, Author,UUID,Size,SubImages) VALUES (?, ?,?,?,0)`, name, author, uuid, size)
-	if err != nil {
+func CreateImage(name string, author uint, uuid string, size int64) error {
+	image := model.ImageModel{
+		Name:      name,
+		Author:    author,
+		UUID:      uuid,
+		Size:      size,
+		SubImages: 0,
+	}
+
+	if err := db.DB.Create(&image).Error; err != nil {
 		return err
 	}
 	return nil
 }
-
 func GetImageFromUUID(uuid string) (*model.ImageModel, error) {
 	var image model.ImageModel
-
-	query := `SELECT ID, Name, Author,UUID,Size,SubImages FROM Images WHERE UUID = ?`
-
-	err := db.DB.QueryRow(query, uuid).Scan(&image.ID, &image.Name, &image.Author, &image.UUID, &image.Size, &image.SubImages)
-	if err != nil {
+	if err := db.DB.Where("uuid = ?", uuid).First(&image).Error; err != nil {
 		return nil, err
 	}
 	return &image, nil
 }
 func UpdateSizeAndCount(uuid string, sizeDiff int64, countDiff int) error {
-	query := `UPDATE Images SET Size = Size + ?,SubImages = SubImages + ? WHERE UUID = ?`
-	_, err := db.DB.Exec(query, sizeDiff, countDiff, uuid)
-	if err != nil {
+	var image model.ImageModel
+
+	if err := db.DB.Where("uuid = ?", uuid).First(&image).Error; err != nil {
 		return err
 	}
+	if err := db.DB.Model(&image).Updates(map[string]interface{}{
+		"Size":      image.Size + sizeDiff,
+		"SubImages": image.SubImages + countDiff,
+	}).Error; err != nil {
+		return err
+	}
+
 	return nil
 }
+
 func GetAllImages() ([]model.ImageModel, error) {
 	var images []model.ImageModel
-	query := `SELECT ID, Name, Author,UUID,Size,SubImages FROM Images`
-
-	rows, err := db.DB.Query(query)
-	defer rows.Close()
-	if err != nil {
+	if err := db.DB.Find(&images).Error; err != nil {
 		return nil, err
-	}
-	for rows.Next() {
-		var image model.ImageModel
-		err := rows.Scan(&image.ID, &image.Name, &image.Author, &image.UUID, &image.Size, &image.SubImages)
-		if err != nil {
-			panic(err)
-		}
-		images = append(images, image)
 	}
 	return images, nil
 }

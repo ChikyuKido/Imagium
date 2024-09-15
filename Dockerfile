@@ -14,7 +14,7 @@ RUN GOOS=linux GOARCH=amd64 CGO_ENABLED=1 go build -o iamgu .
 # Runtime stage
 FROM debian:bookworm-slim
 
-WORKDIR /root/
+WORKDIR /app/
 
 
 RUN apt-get update && \

@@ -1,10 +1,12 @@
 package model
 
+import "gorm.io/gorm"
+
 type User struct {
-	ID       int    `json:"id"`
-	Username string `json:"username"`
-	Password string `json:"password"`
-	Roles    string `json:"roles"`
+	gorm.Model
+	Username string
+	Password string
+	Roles    string
 }
 
 const (
@@ -13,6 +15,7 @@ const (
 	ROLE_UPLOAD_IMAGE = "uploadImage"
 	ROLE_REGISTER     = "register"
 	ROLE_VIEW_STATS   = "viewStats"
+	ROLE_VIEW_LIBRARY = "viewLibrary"
 )
 
 var Roles = []string{
@@ -21,4 +24,5 @@ var Roles = []string{
 	ROLE_UPLOAD_IMAGE,
 	ROLE_REGISTER,
 	ROLE_VIEW_STATS,
+	ROLE_VIEW_LIBRARY,
 }

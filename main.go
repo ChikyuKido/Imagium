@@ -74,7 +74,7 @@ func main() {
 		panic(err)
 	}
 	logrus.SetOutput(io.MultiWriter(file, os.Stdout))
-	logrus.SetLevel(logrus.InfoLevel)
+	logrus.SetLevel(logrus.DebugLevel)
 	initDB()
 
 	gin.SetMode(gin.ReleaseMode)

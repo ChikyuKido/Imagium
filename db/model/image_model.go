@@ -1,9 +1,11 @@
 package model
 
+import "gorm.io/gorm"
+
 type ImageModel struct {
-	ID        int
+	gorm.Model
 	Name      string
-	Author    int
+	Author    uint
 	UUID      string
 	Size      int64
 	SubImages int

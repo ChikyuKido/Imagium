@@ -57,7 +57,6 @@ func adminRegister(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, gin.H{"message": "Successfully register a admin user"})
 }
-
 func getAllUsers(c *gin.Context) {
 	users, err := repo.GetAllUsers()
 	if err != nil {

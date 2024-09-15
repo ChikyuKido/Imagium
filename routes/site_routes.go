@@ -80,6 +80,7 @@ func InitSiteRoutes(r *gin.Engine) {
 
 	servePageWith("/", "./static/html/index.html", redirectGroup, middlewares.AuthPermission("uploadImage", true))
 	servePageWith("/register", "./static/html/register.html", redirectGroup, middlewares.AuthPermission("register", true))
+	servePageWith("/library", "./static/html/library.html", redirectGroup, middlewares.AuthPermission("viewLibrary", true))
 	servePage("/login", "./static/html/login.html", redirectGroup)
 	servePageWith("/admin/register", "./static/html/admin/register.html", redirectGroup, middlewares.AdminRegisterAvailable(true))
 	servePageWith("/admin/dashboard", "./static/html/admin/dashboard.html", redirectGroup, middlewares.AuthPermission("admin", true))

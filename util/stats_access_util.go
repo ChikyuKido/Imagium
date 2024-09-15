@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-var statsDir string = "./data/stats"
+var statsDir = "./data/stats"
 
 type AccessStats struct {
 	AllTime    int32
@@ -28,8 +28,10 @@ type AccessStats struct {
 	L15Minutes int32
 }
 
+// CurrentAccessStats used for caching
 var CurrentAccessStats *AccessStats
 
+// AggregationTime how often the access log should be combined
 var AggregationTime int64 = 60 * 15
 
 var (

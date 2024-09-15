@@ -8,7 +8,7 @@ It is written in go and uses plain html/js and bulma css. No framework or smth l
 - [x] View Images url builder
 - [x] Admin account / Dashboard
 - [x] Role based authentication
-- [ ] View all Images from user
+- [x] View all Images from user
 - [ ] Delete Images
 - [ ] Automatically delete images
 - [ ] Animated images. Also gifs or so

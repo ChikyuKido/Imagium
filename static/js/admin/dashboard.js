@@ -25,9 +25,9 @@ function loadUsers(){
             users.forEach(user => {
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
-                    <td>${user.id}</td>
-                    <td>${user.username}</td>
-                    <td><button class="button is-small is-link" onclick="manageRoles(${user.id}, '${user.roles}')">${user.roles}</button></td>`;
+                    <td>${user.ID}</td>
+                    <td>${user.Username}</td>
+                    <td><button class="button is-small is-link" onclick="manageRoles(${user.ID}, '${user.Roles}')">${user.Roles}</button></td>`;
                 tbody.appendChild(tr);
             });
         })

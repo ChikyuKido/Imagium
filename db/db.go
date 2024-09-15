@@ -1,26 +1,31 @@
 package db
 
 import (
-	"database/sql"
 	_ "github.com/mattn/go-sqlite3"
+	gorm_logrus "github.com/onrik/gorm-logrus"
 	"github.com/sirupsen/logrus"
+	"gorm.io/driver/sqlite"
+	"gorm.io/gorm"
 )
 
-var DB *sql.DB
+var DB *gorm.DB
 
 func InitDB(dataSourceName string) {
 	var err error
-	DB, err = sql.Open("sqlite3", dataSourceName)
+	DB, err = gorm.Open(sqlite.Open("data/database.db"), &gorm.Config{
+		Logger: gorm_logrus.New(),
+	})
 	if err != nil {
-		logrus.Fatal("Could not open database: ", err)
-	}
-	if err = DB.Ping(); err != nil {
 		logrus.Fatal("Could not open database: ", err)
 	}
 }
 
 func CloseDB() {
 	if DB != nil {
-		DB.Close()
+		db, err := DB.DB()
+		if err != nil {
+			return
+		}
+		db.Close()
 	}
 }
