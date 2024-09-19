@@ -1,9 +1,7 @@
 # Build stage
-FROM golang:1.23.1-alpine AS builder
+FROM golang:1.23.1 AS builder
 
 WORKDIR /app
-ENV CGO_ENABLED=1 GOOS=linux GOARCH=amd64
-RUN apk add --no-cache upx gcc musl-dev
 
 COPY go.mod go.sum ./
 
@@ -11,9 +9,7 @@ RUN go mod download
 
 COPY . .
 
-RUN go build -ldflags="-s -w" imagu
-
-RUN upx --best --lzma imagu
+RUN GOOS=linux GOARCH=amd64 CGO_ENABLED=1 go build -o imagu .
 
 # Runtime stage
 FROM debian:bookworm-slim
