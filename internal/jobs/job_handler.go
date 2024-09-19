@@ -20,7 +20,7 @@ func (h *JobHandler) AddJob(job Job) {
 }
 
 func (h *JobHandler) Run() {
-	ticker := time.NewTicker(1 * time.Second)
+	ticker := time.NewTicker(1 * time.Minute)
 	defer ticker.Stop()
 
 	for {
