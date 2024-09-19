@@ -16,12 +16,17 @@ RUN go build -ldflags="-s -w" imagu
 RUN upx --best --lzma imagu
 
 # Runtime stage
-FROM alpine:latest
+FROM debian:bookworm-slim
 
 WORKDIR /app/
 
 
-RUN apk add --no-cache imagemagick
+RUN apt-get update && \
+    apt-get install -y imagemagick && \
+    rm -rf /var/lib/apt/lists/*
+
+
+RUN ln -s /usr/bin/convert /usr/bin/magick
 
 COPY --from=builder /app/imagu .
 COPY --from=builder /app/static ./static
