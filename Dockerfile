@@ -2,7 +2,7 @@
 FROM golang:1.23.1-alpine AS builder
 
 WORKDIR /app
-ENV CGO_ENABLED=0 GOOS=linux GOARCH=amd64
+ENV CGO_ENABLED=1 GOOS=linux GOARCH=amd64
 RUN apk add --no-cache upx
 
 COPY go.mod go.sum ./
