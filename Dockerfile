@@ -3,7 +3,7 @@ FROM golang:1.23.1-alpine AS builder
 
 WORKDIR /app
 ENV CGO_ENABLED=1 GOOS=linux GOARCH=amd64
-RUN apk add --no-cache upx
+RUN apk add --no-cache upx gcc musl-dev
 
 COPY go.mod go.sum ./
 
