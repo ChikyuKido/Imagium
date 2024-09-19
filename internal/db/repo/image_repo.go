@@ -1,8 +1,8 @@
 package repo
 
 import (
-	"imagu/db"
-	"imagu/db/model"
+	"imagu/internal/db"
+	"imagu/internal/db/model"
 )
 
 func InitImageRepo() error {

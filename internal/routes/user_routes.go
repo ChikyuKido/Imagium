@@ -4,10 +4,10 @@ import (
 	"database/sql"
 	"errors"
 	"github.com/gin-gonic/gin"
-	"imagu/db/model"
-	"imagu/db/repo"
-	"imagu/middlewares"
-	"imagu/util"
+	model2 "imagu/internal/db/model"
+	"imagu/internal/db/repo"
+	auth2 "imagu/internal/middlewares/auth"
+	"imagu/internal/util"
 	"net/http"
 	"os"
 	"strconv"
@@ -15,8 +15,8 @@ import (
 
 func InitUserRoutes(r *gin.Engine) {
 	r.POST("/api/v1/user/login", loginUser)
-	r.POST("/api/v1/user/register", middlewares.AuthPermission("register", false), registerUser)
-	r.GET("/api/v1/user/library", middlewares.AuthPermission("viewLibrary", false), library)
+	r.POST("/api/v1/user/register", auth2.AuthPermission("register", false), registerUser)
+	r.GET("/api/v1/user/library", auth2.AuthPermission("viewLibrary", false), library)
 }
 
 func registerUser(c *gin.Context) {
@@ -64,7 +64,7 @@ func loginUser(c *gin.Context) {
 		return
 	}
 
-	token, err := util.GenerateJWT(request.Username)
+	token, err := auth2.GenerateJWT(request.Username)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not generate token"})
 		return
@@ -80,7 +80,7 @@ func library(c *gin.Context) {
 		c.Abort()
 		return
 	}
-	u, ok := user.(*model.User)
+	u, ok := user.(*model2.User)
 	if !ok {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Invalid user type"})
 		c.Abort()
@@ -110,7 +110,7 @@ func library(c *gin.Context) {
 	}
 
 	var response struct {
-		Images []model.ImageModel
+		Images []model2.ImageModel
 		Pages  int
 	}
 	response.Images = images

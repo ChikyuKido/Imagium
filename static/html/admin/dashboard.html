@@ -76,7 +76,34 @@
         </div>
         <div class="content is-hidden" id="settings-section">
             <h2 class="subtitle">Settings</h2>
-            <p>Settings content goes here.</p>
+            <form id="settings-form">
+                <div class="field">
+                    <label class="label">Allow Admin Register </label>
+                    <div class="control">
+                        <input class="checkbox" type="checkbox" id="admin-register">
+                        <p>If you want a second administrator account, you can uncheck this box and all traffic will be redirected to the Register Admin page. You can also create a normal account and then add the admin role</p>
+                    </div>
+                </div>
+                <div class="field">
+                    <label class="label">Aggregation Time (minutes)</label>
+                    <div class="control">
+                        <input class="input" type="number" id="aggregation-time" placeholder="Aggregation Time">
+                        <p>How often the access logs should be aggregated. If you increase this value, no data will be displayed for a lower access status date. If you set this value to 60 minutes, for example, the access statistics L15M and L30M will always be 0. The advantage in the long term is that the file can be parsed faster and the job of combining them does not have to run as often. It is not recommended to reduce this value to less than 15 minutes.</p>
+                    </div>
+                </div>
+                <div class="field">
+                    <label class="label">Automatic Deletion Time (minutes)</label>
+                    <div class="control">
+                        <input class="input" type="number" id="automatic-deletion-time" placeholder="Automatic Deletion Time">
+                        <p>How long a subimage should be saved after the last access. Even if a subimage has not been accessed for 7 days, it will be deleted. </p>
+                    </div>
+                </div>
+                <div class="field">
+                    <div class="control">
+                        <button class="button is-primary" type="button" onclick="saveSettings()">Save Settings</button>
+                    </div>
+                </div>
+            </form>
         </div>
     </div>
 </section>

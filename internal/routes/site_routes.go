@@ -4,7 +4,8 @@ import (
 	"bytes"
 	"compress/gzip"
 	"github.com/gin-gonic/gin"
-	"imagu/middlewares"
+	middlewares2 "imagu/internal/middlewares"
+	"imagu/internal/middlewares/auth"
 	"io/fs"
 	"mime"
 	"os"
@@ -76,14 +77,14 @@ func serveDirectory(rootPath string, baseDir string, r *gin.RouterGroup) {
 func InitSiteRoutes(r *gin.Engine) {
 	sitesGroup := r.Group("/")
 	redirectGroup := sitesGroup.Group("/")
-	redirectGroup.Use(middlewares.GlobalRedirect())
+	redirectGroup.Use(middlewares2.GlobalRedirect())
 
-	servePageWith("/", "./static/html/index.html", redirectGroup, middlewares.AuthPermission("uploadImage", true))
-	servePageWith("/register", "./static/html/register.html", redirectGroup, middlewares.AuthPermission("register", true))
-	servePageWith("/library", "./static/html/library.html", redirectGroup, middlewares.AuthPermission("viewLibrary", true))
+	servePageWith("/", "./static/html/index.html", redirectGroup, auth.AuthPermission("uploadImage", true))
+	servePageWith("/register", "./static/html/register.html", redirectGroup, auth.AuthPermission("register", true))
+	servePageWith("/library", "./static/html/library.html", redirectGroup, auth.AuthPermission("viewLibrary", true))
 	servePage("/login", "./static/html/login.html", redirectGroup)
-	servePageWith("/admin/register", "./static/html/admin/register.html", redirectGroup, middlewares.AdminRegisterAvailable(true))
-	servePageWith("/admin/dashboard", "./static/html/admin/dashboard.html", redirectGroup, middlewares.AuthPermission("admin", true))
+	servePageWith("/admin/register", "./static/html/admin/register.html", redirectGroup, middlewares2.AdminRegisterAvailable(true))
+	servePageWith("/admin/dashboard", "./static/html/admin/dashboard.html", redirectGroup, auth.AuthPermission("admin", true))
 
 	serveDirectory("/js/", "./static/js", sitesGroup)
 	serveDirectory("/css/", "./static/css", sitesGroup)

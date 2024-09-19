@@ -1,8 +1,9 @@
-package util
+package stats
 
 import (
 	"bufio"
 	"fmt"
+	"imagu/internal/db/repo"
 	"os"
 	"strconv"
 	"strings"
@@ -30,9 +31,6 @@ type AccessStats struct {
 
 // CurrentAccessStats used for caching
 var CurrentAccessStats *AccessStats
-
-// AggregationTime how often the access log should be combined
-var AggregationTime int64 = 60 * 15
 
 var (
 	accessLogFile   *os.File
@@ -62,8 +60,12 @@ func logWriter() {
 			nextAggregation = time.UnixMilli(0)
 		}
 		if time.Now().After(nextAggregation) {
-			aggregateLogs()
-			nextAggregation = time.Now().Add(time.Duration(AggregationTime) * time.Second)
+			aggregationTime, _ := repo.GetAggregationTime()
+			if aggregationTime == -1 {
+				aggregationTime = 15
+			}
+			aggregateLogs(int64(aggregationTime))
+			nextAggregation = time.Now().Add(time.Duration(aggregationTime) * time.Minute)
 		}
 		_, err := accessLogFile.WriteString(entry)
 		if err != nil {
@@ -72,7 +74,7 @@ func logWriter() {
 		}
 	}
 }
-func aggregateLogs() {
+func aggregateLogs(aggregationTime int64) {
 	if accessLogFile != nil {
 		accessLogFile.Close()
 	}
@@ -103,7 +105,7 @@ func aggregateLogs() {
 					return
 				}
 			}
-			firstTime = currentTime + AggregationTime
+			firstTime = currentTime + aggregationTime
 			count = 0
 		}
 		lastTime = currentTime

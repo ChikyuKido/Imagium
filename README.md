@@ -9,6 +9,8 @@ It is written in go and uses plain html/js and bulma css. No framework or smth l
 - [x] Admin account / Dashboard
 - [x] Role based authentication
 - [x] View all Images from user
+- [x] Settings page for admins
 - [ ] Delete Images
-- [ ] Automatically delete images
+- [x] Automatically delete images
+- [ ] Simple names. Also instead an uuid use a name like image1
 - [ ] Animated images. Also gifs or so

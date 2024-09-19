@@ -5,10 +5,11 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"html/template"
-	"imagu/converter"
-	"imagu/db/repo"
-	"imagu/middlewares"
-	"imagu/util"
+	"imagu/internal/converter"
+	"imagu/internal/db/repo"
+	"imagu/internal/middlewares/auth"
+	"imagu/internal/stats"
+	util2 "imagu/internal/util"
 	"mime/multipart"
 	"net/http"
 	"os"
@@ -23,9 +24,9 @@ var uploadsDir = "./data/uploads"
 
 // InitImageRoutes sets up the routes for image-related endpoints.
 func InitImageRoutes(r *gin.Engine) {
-	r.POST("/api/v1/image/uploadImage", middlewares.AuthPermission("uploadImage", false), uploadImage)
-	r.GET("/image/get/:id", middlewares.AuthPermission("viewImage", false), getImage)
-	r.GET("/image/view/:id", middlewares.AuthPermission("viewImage", false), viewImage)
+	r.POST("/api/v1/image/uploadImage", auth.AuthPermission("uploadImage", false), uploadImage)
+	r.GET("/image/get/:id", auth.AuthPermission("viewImage", false), getImage)
+	r.GET("/image/view/:id", auth.AuthPermission("viewImage", false), viewImage)
 }
 
 // isImageTypeLossy determines if the provided file extension indicates a lossy image type.
@@ -91,7 +92,7 @@ func uploadImage(c *gin.Context) {
 		return
 	}
 
-	user := util.GetUserFromContext(c)
+	user := util2.GetUserFromContext(c)
 	if user == nil {
 		logrus.Error("User not found")
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "User not found"})
@@ -192,7 +193,7 @@ func getImage(c *gin.Context) {
 	}
 	filePath += fmt.Sprintf(".%s", ext)
 
-	if !util.FileExists(filePath) {
+	if !util2.FileExists(filePath) {
 		dir := filepath.Join(uploadsDir, uuid)
 		baseFile, err := getBaseImageFileName(dir)
 		if err != nil {
@@ -212,7 +213,7 @@ func getImage(c *gin.Context) {
 		}
 	}
 
-	util.LogAccess(uuid)
+	stats.LogAccess(uuid)
 	c.File(filePath)
 }
 

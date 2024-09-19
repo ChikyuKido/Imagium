@@ -3,7 +3,7 @@ package middlewares
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
-	"imagu/db/repo"
+	"imagu/internal/db/repo"
 	"net/http"
 )
 

@@ -3,11 +3,12 @@ package main
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
-	"imagu/db"
-	"imagu/db/repo"
-	"imagu/middlewares"
-	"imagu/routes"
-	"imagu/util"
+	"imagu/internal/db"
+	repo2 "imagu/internal/db/repo"
+	"imagu/internal/jobs"
+	"imagu/internal/middlewares/auth"
+	routes2 "imagu/internal/routes"
+	"imagu/internal/stats"
 	"io"
 	"os"
 	"time"
@@ -52,15 +53,15 @@ func initDB() {
 	db.InitDB("./data/database.db")
 	logrus.Info("Initialized database")
 
-	err := repo.InitUserRepo()
+	err := repo2.InitUserRepo()
 	if err != nil {
 		logrus.Fatal("Error init user repo: ", err)
 	}
-	err = repo.InitImageRepo()
+	err = repo2.InitImageRepo()
 	if err != nil {
 		logrus.Fatal("Error init image repo: ", err)
 	}
-	err = repo.InitSettingsRepo()
+	err = repo2.InitSettingsRepo()
 	if err != nil {
 		logrus.Fatal("Error init settings repo: ", err)
 	}
@@ -74,26 +75,29 @@ func main() {
 		panic(err)
 	}
 	logrus.SetOutput(io.MultiWriter(file, os.Stdout))
-	logrus.SetLevel(logrus.DebugLevel)
+	logrus.SetLevel(logrus.InfoLevel)
 	initDB()
 
 	gin.SetMode(gin.ReleaseMode)
 	r := gin.New()
 	r.Use(LoggerWithLogrus(), gin.Recovery())
 	r.MaxMultipartMemory = 8 << 20
-	r.Use(middlewares.AuthMiddleware())
+	r.Use(auth.AuthMiddleware())
 
-	routes.InitSiteRoutes(r)
-	routes.InitUserRoutes(r)
-	routes.InitStatsRoutes(r)
-	routes.InitImageRoutes(r)
-	routes.InitAdminRoutes(r)
+	routes2.InitSiteRoutes(r)
+	routes2.InitUserRoutes(r)
+	routes2.InitStatsRoutes(r)
+	routes2.InitImageRoutes(r)
+	routes2.InitAdminRoutes(r)
 
+	jobHandler := jobs.JobHandler{}
+	jobHandler.AddJob(jobs.DeletionJob)
+	go jobHandler.Run()
 	logrus.Info("Starting Gin server")
 	err = r.Run(":" + os.Getenv("PORT"))
 	if err != nil {
 		logrus.Fatal("Could not Run gin: ", err)
 	}
 	db.CloseDB()
-	util.CloseLog()
+	stats.CloseLog()
 }

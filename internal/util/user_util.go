@@ -2,7 +2,7 @@ package util
 
 import (
 	"github.com/gin-gonic/gin"
-	"imagu/db/model"
+	"imagu/internal/db/model"
 )
 
 func GetUserFromContext(c *gin.Context) *model.User {

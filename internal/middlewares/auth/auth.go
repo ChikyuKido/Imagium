@@ -1,11 +1,10 @@
-package middlewares
+package auth
 
 import (
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
-	"imagu/db/model"
-	"imagu/db/repo"
-	"imagu/util"
+	"imagu/internal/db/model"
+	"imagu/internal/db/repo"
 	"net/http"
 )
 
@@ -29,7 +28,7 @@ func AuthMiddleware() gin.HandlerFunc {
 			return
 		}
 
-		token, err := util.GetToken(tokenString)
+		token, err := GetToken(tokenString)
 		if err != nil || !token.Valid {
 			c.SetCookie("jwt", "", -1, "/", "", false, true)
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token"})

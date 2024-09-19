@@ -44,10 +44,10 @@ const renderPagination = (totalPages) => {
     const paginationContainer = document.getElementById('pagination');
     paginationContainer.innerHTML = '';
 
-    for (let i = 1; i <= totalPages; i++) {
+    for (let i = 0; i <= totalPages; i++) {
         const pageLink = `
                     <a class="pagination-link ${i === currentPage ? 'is-current' : ''}" href="?site=${i}" data-page="${i}">
-                        ${i}
+                        ${i+1}
                     </a>
                 `;
         paginationContainer.innerHTML += pageLink;
@@ -64,7 +64,7 @@ const loadPage = async (page) => {
 
 document.addEventListener('DOMContentLoaded', () => {
     const urlParams = new URLSearchParams(window.location.search);
-    currentPage = parseInt(urlParams.get('site')) || 1;
+    currentPage = parseInt(urlParams.get('site')) || 0;
     loadPage(currentPage);
 
     document.getElementById('pagination').addEventListener('click', (event) => {
